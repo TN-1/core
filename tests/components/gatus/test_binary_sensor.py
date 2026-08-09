@@ -43,11 +43,7 @@ def _to_endpoint_statuses(raw_data: list[dict[str, Any]]) -> list[EndpointStatus
             name=ep["name"],
             group=ep.get("group"),
             results=[
-                Result(
-                    success=r["success"],
-                    status=r.get("status"),
-                    duration=r.get("duration"),
-                )
+                Result(success=r["success"], status=r["status"])
                 for r in ep.get("results", [])
             ],
         )
@@ -142,6 +138,12 @@ async def test_binary_sensor_empty_results(
     state = hass.states.get("binary_sensor.backend_service")
     assert state is not None
     assert state.state == "unavailable"
+
+    # Verify underlying properties return None directly on empty results
+    entity = hass.data["binary_sensor"].get_entity("binary_sensor.backend_service")
+    assert entity is not None
+    assert entity.latest_result is None
+    assert entity.is_on is None
 
 
 async def test_binary_sensor_missing_status(
